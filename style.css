@@ -1,0 +1,56 @@
+.center {
+	text-align:center;
+}
+input{
+	display:block;
+	margin: .3rem auto;
+	//padding: .7rem .7rem; 
+	border-style: solid;
+	border-width: .1rem;
+	background-color: white;
+	border-radius: .3rem;
+	box-shadow: 0 .1rem .3rem 0;
+	border-color: burlywood;
+	width: 25%;
+	height: 2.3rem;
+	font-size: 1.5rem;
+}
+button{
+	margin: 0 0 0 .2rem;
+	float:right;
+	width:40%;
+	height:100%;
+	background-color: bisque;
+	border-radius: .7rem;
+	
+	
+}
+#bottons{
+	position:relative;
+	margin: 0 auto;
+	text-align: center;
+	width:25%;
+	height: 2.5rem;
+	
+}
+.footer {
+	background:#000;
+	width:100%;
+	height:3rem;
+	position:absolute;
+	bottom:0;
+	left:0;
+	color: white;
+	font-size: 1.5rem;
+}
+.wrapper {
+	min-height:100%;
+	position:relative;
+}
+.content {
+	padding-bottom:3rem;
+}
+a {
+	color: inherit;
+	text-decoration: inherit;
+}
