@@ -1,19 +1,29 @@
 .center {
 	text-align:center;
 }
-input{
-	display:block;
-	margin: .3rem auto;
-	//padding: .7rem .7rem; 
+.input{
+	position: relative;
+	width: 25%;
+	height: 2.3rem;
+	margin: .7rem auto;
+	font-size: 1.5rem;
+}
+.input input[type="text"]{
+	position:relative;
+	height : 100%;
+	width: 100%;
 	border-style: solid;
 	border-width: .1rem;
 	background-color: white;
 	border-radius: .3rem;
 	box-shadow: 0 .1rem .3rem 0;
 	border-color: burlywood;
-	width: 25%;
-	height: 2.3rem;
+
 	font-size: 1.5rem;
+}
+.input input[type="checkbox"]{
+	width: 1.2rem;
+	height:1.2rem;
 }
 button{
 	margin: 0 0 0 .2rem;
@@ -53,4 +63,7 @@ button{
 a {
 	color: inherit;
 	text-decoration: inherit;
+}
+.float-right{
+	float:right;
 }
