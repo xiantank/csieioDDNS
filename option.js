@@ -1,15 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
-
-	
-	
 	changeIPInput();
-
+	document.getElementById("ip").disabled=true;
 	//add listenser for save
 	var save = document.getElementById("save");
+	
 	save.addEventListener("click", saveInfo);
 	
 	//add listenser for usePrivateIP checkbox
 	var usePrivateIP = document.getElementById("usePrivateIP");
+	
 	usePrivateIP.addEventListener('change', function(){
 		if(usePrivateIP.checked){
 			localStorage.setItem("option_usePrivateIP","true");
@@ -39,11 +38,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	hostname.value = localStorage.getItem('hostname', hostname.value);
 	token.value = localStorage.getItem('token', token.value);
+	/*	don't show token in option 
+	 token.value = localStorage.getItem('token', token.value).replace(/(.*?-)(.*)/g, function ($0, $1, $2) {
+        return $1 + (new Array($2.length + 1).join("*"));
+    });
+    */
 	ip.value = localStorage.getItem('ip', ip.value);
 	updateInterval.value = localStorage.getItem('updateInterval', updateInterval.value);
 
 	//check isSave before leave
-	/*
+	
 	window.addEventListener("beforeunload", function(e) {
 		var unSaveMsg = "Not save yet!";
 
@@ -53,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		(e || window.event).returnValue = unSaveMsg;
 		return unSaveMsg;
-	});*/
+	});
 
 });
 
@@ -87,13 +91,12 @@ function changeIPInput(){
 		return ;
 	}
 
-	
+	//jsonp for ip
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', "http://api.hostip.info/get_json.php");
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == XMLHttpRequest.DONE) {
 			if (xhr.status == 200) {
-				console.log(xhr.responseText);
 				try {
 					var data = JSON.parse(xhr.responseText);
 					ip.value = data.ip;
@@ -123,36 +126,20 @@ function updateCsieIoDDNS(ip, token, hostname) {
 }
 
 
-/*
- * about function getLocalIPs
- *
- * source code form : http://stackoverflow.com/questions/18572365/get-local-ip-of-a-device-in-chrome-extension
- * author : Rob W
- * 
- */
 function getLocalIPs(callback) {
     var ips = [];
-
-    var RTCPeerConnection = window.RTCPeerConnection ||
-        window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
-
+    var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
     var pc = new RTCPeerConnection({
-        // Don't specify any stun/turn servers, otherwise you will
-        // also find your public IP addresses.
         iceServers: []
     });
-    // Add a media line, this is needed to activate candidate gathering.
     pc.createDataChannel('');
-    
-    // onicecandidate is triggered whenever a candidate has been found.
     pc.onicecandidate = function(e) {
         if (!e.candidate) {
-            // Candidate gathering completed.
             callback(ips);
             return;
         }
-        var ip = /^candidate:.+ (\S+) \d+ typ/.exec(e.candidate.candidate)[1];
-        if (ips.indexOf(ip) == -1) // avoid duplicate entries (tcp/udp)
+        var ip = /^candidate:.+ (\S+) \d+ typ.*/.exec(e.candidate.candidate)[1];
+        if (ips.indexOf(ip) == -1)
             ips.push(ip);
     };
     pc.createOffer(function(sdp) {
