@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     */
 	ip.value = localStorage.getItem('ip', ip.value);
-	updateInterval.value = localStorage.getItem('updateInterval', updateInterval.value);
+	updateInterval.value = localStorage.getItem('updateInterval', updateInterval.value) || 60;
 
 	//check isSave before leave
 	
