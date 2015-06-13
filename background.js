@@ -6,6 +6,7 @@ chrome.alarms.create(alarmName, {
 });
 
 chrome.alarms.onAlarm.addListener(function(alarm) {
+	console.log(alarm,alarm.name);
 	if (alarm.name !== "updateDDNS") {
 		return false;
 	}
@@ -27,46 +28,34 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
 		return ;
 	}
 	// not privateIP
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', "http://api.hostip.info/get_json.php");
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == XMLHttpRequest.DONE) {
-			if (xhr.status == 200) {
-				console.log(xhr.responseText);
-				var data;
-				try {
-					data = JSON.parse(xhr.responseText);
-				} catch(e) {
-					console.error("parse Json error@onAlarm");
-					return false;
-				}
-				var ip = data.ip;
-				var token = localStorage.getItem("token");
-				var hostname = localStorage.getItem("hostname");
-				if (ip && token && hostname) {
-					updateCsieIoDDNS(ip, token, hostname);
-				} else {
-					console.error("onAlarm: ip or token or hostname setting error");
-					chrome.alarms.clear("updateDDNS", function(wasCleared) {
-						console.error("updateDDNS alarm clear");
-					});
-				}
-			} else {
-				console.error("fail:" + data);
-			}
-		}
-	};
-	xhr.send();
+	
+
+	var ip = false;
+	var token = localStorage.getItem("token");
+	var hostname = localStorage.getItem("hostname");
+	if (token && hostname) {
+		updateCsieIoDDNS(ip, token, hostname);
+	} else {
+		console.error("onAlarm: ip or token or hostname setting error");
+		chrome.alarms.clear("updateDDNS", function(wasCleared) {
+			console.log("updateDDNS alarm clear");
+		});
+	}
 
 });
 
-function updateCsieIoDDNS(ip, token, hostname) {
+function updateCsieIoDDNS(ip, token, hostname , noti) {//params.noti can only be true or not set, just for force update
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + '&ip=' + ip);
+	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + ((ip)?'&ip='+ip:"")  );
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == XMLHttpRequest.DONE) {
 			if (xhr.status == 200) {
-				console.log(xhr.responseText);
+				//console.log(xhr.responseText);
+				noti = noti || localStorage.getItem("option_useNotification");
+				if(noti == "true"){
+					notification(xhr.responseText);
+				}
+
 			} else {
 				console.error(xhr.responseText);
 			}
@@ -74,7 +63,27 @@ function updateCsieIoDDNS(ip, token, hostname) {
 	};
 	xhr.send();
 }
+function notification(data){
 
+	var mesg = "fail";
+	if (data == "OK") {
+		mesg = "csie.io DDNS success";
+	} else if (data == "KO") {
+		mesg = "Wrong token or hostname!\nPlease check again.";
+	}
+	var opt = {
+		type : "basic",
+		title : "csie.io DDNS update",
+		message : mesg,
+		iconUrl : "img/csieio-128.png"
+
+	};
+
+	chrome.notifications.create("id" + Math.random(), opt, function(id) {
+		console.log(id);
+	});
+
+}
 chrome.browserAction.onClicked.addListener(function() {
 	var optionhUrl = chrome.extension.getURL('option.html');
 	chrome.tabs.create({
@@ -102,7 +111,7 @@ function getLocalIPs(callback) {
             callback(ips);
             return;
         }
-        var ip = /^candidate:.+ (\S+) \d+ typ.*/.exec(e.candidate.candidate)[1];
+        var ip = /(\d+\.\d+\.\d+\.\d+)/.exec(e.candidate.candidate)[1];
         if (ips.indexOf(ip) == -1)
             ips.push(ip);
     };
