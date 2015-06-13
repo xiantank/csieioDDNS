@@ -5,7 +5,7 @@
 	"background": {
 		"scripts": ["background.js"]
 	},
-	"permissions": ["tabs", "storage", "alarms", "https://csie.io/*"],
+	"permissions": ["tabs", "notifications", "storage", "alarms", "https://csie.io/*"],
 	"browser_action": {
 		"default_title": "csie.io DDNS",
 		"default_icon": "img/csieio-32.png"
