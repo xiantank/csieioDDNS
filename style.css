@@ -4,6 +4,8 @@
 .input{
 	position: relative;
 	width: 25vw;
+	min-width: 21rem;
+	min-height: 3rem;
 	height: 2.3rem;
 	margin: .7rem auto;
 	font-size: 1.5rem;
