@@ -1,5 +1,5 @@
 var alarmName = "updateDDNS";
-var updateInterval = parseInt(localStorage.getItem("updateInterval")) || 1;
+var updateInterval = parseInt(localStorage.getItem("updateInterval")) || 60;
 chrome.alarms.create(alarmName, {
 	delayInMinutes : updateInterval,
 	periodInMinutes : updateInterval
