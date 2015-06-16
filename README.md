@@ -14,6 +14,7 @@ csie.io DDNS client for chrome.
 work:
 add always run DDNS even browser close(set in option) //done
 >browser沒有實際關掉，有background權限的extension都仍會繼續執行<br/>
+
 option page 的ip部分都改為需要時才去要 //done<br/>
 option page 改頁面，預計<br/>
 >為點擊才會出現advanced options //TODO<br/>
