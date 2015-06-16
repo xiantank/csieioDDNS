@@ -17,14 +17,21 @@
 					<input type="text" id="token" placeholder="token"/>
 				</div>
 				<div class="input">
-					<input type="text" id="ip" placeholder="ip"/>
-				</div>
-				<div class="input">
 					<input type="text" id="updateInterval" placeholder="updateInterval"/>
 				</div>
-				<div class="input">
-					<span class="float-left"><input type="checkbox" id="useNotification">Notification</span>
-					<span class="float-right"><input type="checkbox" id="usePrivateIP" />use private IP</span>					
+				<div id="advancedOptions" class="input">
+					<div id="advOptionTopbar">
+						- advanced options
+					</div>
+					<hr />
+					<div id="advOptionContainer">
+					<div><input type="checkbox" id="useNotification">Notification</div>
+					<div >
+						<input type="checkbox" id="usePrivateIP" />Private
+						<span id="ip" title="">IP<img class="inline-img" src="img/question.png"/></span>
+					</div>
+					<div><input type="checkbox" id="useBackground">Always Background</div>
+					</div>
 				</div>
 				<div id="bottons">
 					<button id="save">
