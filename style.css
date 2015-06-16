@@ -44,6 +44,16 @@ button{
 	height: 2.5rem;
 	
 }
+#advancedOptions{
+	height: initial;
+	border: rgb(84, 157, 163);
+	border-width: .2rem;
+	border-style: double;
+	border-radius: .5rem;
+	box-sizing: border-box;
+	font-size: 1.2rem;
+
+}
 .footer {
 	background:#000;
 	width:100vw;
@@ -70,4 +80,11 @@ a {
 }
 .float-left{
 	float:left;
+}
+.clearfix{
+	clear: both;
+}
+.inline-img{
+	height: 1.4rem;
+	width: 1.4rem;
 }
