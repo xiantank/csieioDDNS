@@ -9,3 +9,13 @@ csie.io DDNS client for chrome.
 參考來源: <a href="https://github.com/clyang/CsieDnsClients">https://github.com/clyang/CsieDnsClients</a>
 
 顯示自己IP來源: <a href="http://www.hostip.info">My IP Address Lookup</a>
+
+--
+work:
+add always run DDNS even browser close(set in option) //done
+>browser沒有實際關掉，有background權限的extension都仍會繼續執行
+option page 的ip部分都改為需要時才去要 //done
+option page 改頁面，預計
+>為點擊才會出現advanced options //TODO
+>hover -> show 詳細說明    //TODO     //說明好難寫的好讀易懂...
+
