@@ -54,8 +54,22 @@ document.addEventListener('DOMContentLoaded', function() {
 	//ip.value = localStorage.getItem('ip', ip.value);
 	updateInterval.value = localStorage.getItem('updateInterval', updateInterval.value) || 60;
 
-	//check isSave before leave
+	/* show advance setting*/
+	var advOptionTopbar = document.getElementById('advOptionTopbar');
+	var advOptContainer = document.getElementById('advOptionContainer');
+	advOptContainer.style.display = "none";
+	advOptionTopbar.addEventListener("click" , function(e){
+		if(advOptContainer.style && advOptContainer.style.display == "none"){
+			advOptContainer.style.display = "block";
+			advOptionTopbar.innerHTML = "- advanced options";
+		}else{
+			advOptContainer.style.display = "none";
+			advOptionTopbar.innerHTML = "+ advanced options";
+		}
+		e.stopPropagation();
+	}, false);
 
+	//check isSave before leave
 	window.addEventListener("beforeunload", function(e) {
 		var unSaveMsg = "Not save yet!";
 
@@ -159,7 +173,7 @@ function saveInfo() {
 
 function getIP(callback) {
 
-	var ip = document.getElementById("ip");
+	//var ip = document.getElementById("ip");
 	var usePrivateIP = document.getElementById("usePrivateIP").checked;
 	if (usePrivateIP === true) {
 		getLocalIPs(function(privateIP) {
