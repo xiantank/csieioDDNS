@@ -21,16 +21,22 @@
 				</div>
 				<div id="advancedOptions" class="input">
 					<div id="advOptionTopbar">
-						- advanced options
+						+ advanced options
 					</div>
-					<hr />
 					<div id="advOptionContainer">
-					<div><input type="checkbox" id="useNotification">Notification</div>
-					<div >
-						<input type="checkbox" id="usePrivateIP" />Private
-						<span id="ip" title="">IP<img class="inline-img" src="img/question.png"/></span>
-					</div>
-					<div><input type="checkbox" id="useBackground">Always Background</div>
+						<hr />
+						<div><input type="checkbox" id="useNotification"><label for="useNotification">Notification</label></div>
+						<div >
+							<input type="checkbox" id="usePrivateIP" />
+							<label for="usePrivateIP">
+								Private IP address<img class="inline-img" src="img/question.png" title="使用private IP address (註:在同一NAT底下才能才能存取)"/>
+							</label>
+						</div>
+						<div><input type="checkbox" id="useBackground">
+							<label for="useBackground">
+								Always background
+								<img class="inline-img" src="img/question.png" title="關掉chrome browser, chrome 仍會在背景執行"/>
+							</label></div>
 					</div>
 				</div>
 				<div id="bottons">
