@@ -53,7 +53,7 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
 
 function updateCsieIoDDNS(ip, token, hostname , noti) {//params.noti can only be true or not set, just for force update
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + '&ip=' );
+	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + ((ip)?'&ip='+ip:"")  );
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == XMLHttpRequest.DONE) {
 			if (xhr.status == 200) {
