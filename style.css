@@ -58,14 +58,14 @@ button{
 	height:100%;
 	background-color: bisque;
 	border-radius: .7rem;
-	
-	
+	min-width: 6.5rem;
 }
 #bottons{
 	position:relative;
 	margin: 0 auto;
 	text-align: center;
 	width:25vw;
+	min-width: 21rem;
 	height: 2.5rem;
 	
 }
