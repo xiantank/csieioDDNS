@@ -5,8 +5,8 @@ chrome.storage.local.get("info",function(obj){
 		var updateInterval;
 		updateInterval = info.updateInterval || 60;
 		chrome.alarms.create(alarmName, {
-				delayInMinutes : updateInterval,
-				periodInMinutes : updateInterval
+				delayInMinutes : parseInt(updateInterval),
+				periodInMinutes : parseInt(updateInterval)
 		});
 });
 chrome.alarms.onAlarm.addListener(function(alarm) {
