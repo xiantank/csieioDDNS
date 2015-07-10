@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-	//getIP();
-	//document.getElementById("ip").disabled=true;
+		chrome.storage.local.get("info",function(obj){
+				var info=obj.info||{};
+				init(info);
+		});
+});
+function init(info){
 	//add listenser for save
 	var save = document.getElementById("save");
 
@@ -8,29 +12,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	//add listenser for usePrivateIP checkbox
 	var usePrivateIP = document.getElementById("usePrivateIP");
-	usePrivateIP.checked = (localStorage.getItem("option_usePrivateIP") == "true") ? true : false;
-	//getIP();
+	usePrivateIP.checked = (info.option_usePrivateIP) ? true : false;
 
-	usePrivateIP.addEventListener('change', function() {
-		if (usePrivateIP.checked) {
-			//getIP();
-		} else {
-			//getIP();
-		}
-	});
 	//load state for isNotification
 	var useNotification = document.getElementById("useNotification");
-	useNotification.checked = (localStorage.getItem("option_useNotification") == "true") ? true : false;
+	useNotification.checked = (info.option_useNotification ) ? true : false;
 	//load state for isNotification
 	var useBackground = document.getElementById("useBackground");
-	useBackground.checked = (localStorage.getItem("option_useBackground") == "true") ? true : false;
+	useBackground.checked = (info.option_useBackground ) ? true : false;
 
 	//add listenser for force update
 	var forceUpdate = document.getElementById("forceUpdate");
 	forceUpdate.addEventListener("click", function() {
 		var hostname = document.getElementById("hostname");
 		var token = document.getElementById("token");
-		//var ip = document.getElementById("ip");
 		var updateInterval = document.getElementById("updateInterval");
 		var usePrivateIP = document.getElementById("usePrivateIP");
 		getIP(function(ip) {
@@ -41,18 +36,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	//display saved value
 	var hostname = document.getElementById("hostname");
 	var token = document.getElementById("token");
-	//var ip = document.getElementById("ip");
 	var updateInterval = document.getElementById("updateInterval");
 
-	hostname.value = localStorage.getItem('hostname', hostname.value);
-	token.value = localStorage.getItem('token', token.value);
-	/*	don't show token in option
-	token.value = localStorage.getItem('token', token.value).replace(/(.*?-)(.*)/g, function ($0, $1, $2) {
-	return $1 + (new Array($2.length + 1).join("*"));
-	});
-	*/
-	//ip.value = localStorage.getItem('ip', ip.value);
-	updateInterval.value = localStorage.getItem('updateInterval', updateInterval.value) || 60;
+	hostname.value = info.hostname || "";
+	token.value = info.token || "";
+	updateInterval.value = info.updateInterval || 60;
 
 	/* show advance setting*/
 	var advOptionTopbar = document.getElementById('advOptionTopbar');
@@ -69,20 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		e.stopPropagation();
 	}, false);
 
-	//check isSave before leave
-	window.addEventListener("beforeunload", function(e) {
-		var unSaveMsg = "Not save yet!";
-
-		if (localStorage.getItem('hostname') && localStorage.getItem('token') && localStorage.getItem('ip') && localStorage.getItem('updateInterval')) {
-			return undefined;
-		}
-
-		(e || window.event).returnValue = unSaveMsg;
-		return unSaveMsg;
-	});
-
-});
-
+}
 function askBackground() {
 
 	// Permissions must be requested from inside a user gesture, like a button's
@@ -132,10 +107,7 @@ function cancelBackground() {
 			chrome.notifications.create("id" + Math.random(), opt, function(id) {
 				console.log(id);
 			});
-
 		} else {
-			// The permissions have not been removed (e.g., you tried to remove
-			// required permissions).
 		}
 	});
 }
@@ -152,17 +124,16 @@ function saveInfo() {
 	} else {
 		cancelBackground();
 	}
-	localStorage.setItem("option_usePrivateIP", usePrivateIP.checked);
-	localStorage.setItem("option_useNotification", useNotification.checked);
-	localStorage.setItem("option_useBackground", useBackground.checked);
+	var info={}
 
-	localStorage.setItem('hostname', hostname.value);
-	localStorage.setItem('token', token.value);
-	getIP(function(ip) {
-		localStorage.setItem('ip', ip);
-	});
 
-	localStorage.setItem('updateInterval', updateInterval.value);
+	info["option_usePrivateIP"] = usePrivateIP.checked;
+	info["option_useNotification"]= useNotification.checked;
+	info["option_useBackground"]= useBackground.checked;
+	info['hostname']= hostname.value;
+	info['token']= token.value;
+	info['updateInterval']= updateInterval.value;
+	chrome.storage.local.set({'info':info});
 
 	chrome.alarms.create("updateDDNS", {
 		delayInMinutes : parseInt(updateInterval.value),
@@ -173,7 +144,6 @@ function saveInfo() {
 
 function getIP(callback) {
 
-	//var ip = document.getElementById("ip");
 	var usePrivateIP = document.getElementById("usePrivateIP").checked;
 	if (usePrivateIP === true) {
 		getLocalIPs(function(privateIP) {
@@ -209,12 +179,13 @@ function updateCsieIoDDNS(ip, token, hostname, noti) {//params.noti can only be 
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == XMLHttpRequest.DONE) {
 			if (xhr.status == 200) {
-				//console.log(xhr.responseText);
-				noti = noti || localStorage.getItem("option_useNotification");
-				if (noti == "true") {
-					notification(xhr.responseText);
-				}
-
+					chrome.storage.local.get("info",function(obj){
+							var info=obj.info || {};
+							noti = noti || info.option_useNotification;
+							if (noti ) {
+								notification(xhr.responseText);
+							}
+					});
 			} else {
 				console.error(xhr.responseText);
 			}
