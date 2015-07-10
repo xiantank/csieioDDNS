@@ -1,46 +1,53 @@
 var alarmName = "updateDDNS";
-var updateInterval = parseInt(localStorage.getItem("updateInterval")) || 60;
-chrome.alarms.create(alarmName, {
-	delayInMinutes : updateInterval,
-	periodInMinutes : updateInterval
-});
 
+chrome.storage.local.get("info",function(obj){
+		var info=obj.info;
+		var updateInterval;
+		updateInterval = info.updateInterval || 60;
+		chrome.alarms.create(alarmName, {
+				delayInMinutes : updateInterval,
+				periodInMinutes : updateInterval
+		});
+});
 chrome.alarms.onAlarm.addListener(function(alarm) {
 	console.log(alarm,alarm.name);
 	if (alarm.name !== "updateDDNS") {
 		return false;
 	}
-	var usePrivateIP = localStorage.getItem("option_usePrivateIP");
-	if (usePrivateIP === "true") {
-		getLocalIPs(function(privateIPs) {
-			var ip = privateIPs[0];
-			var token = localStorage.getItem("token");
-			var hostname = localStorage.getItem("hostname");
-			if (ip && token && hostname) {
-				updateCsieIoDDNS(ip, token, hostname);
-			} else {
-				console.error("onAlarm: ip or token or hostname setting error");
-				chrome.alarms.clear("updateDDNS", function(wasCleared) {
-					console.error("updateDDNS alarm clear");
-				});
-			}
-		});
-		return ;
-	}
-	// not privateIP
+	chrome.storage.local.get("info",function(obj){
+			var info=obj.info;
+		var usePrivateIP = info.option_usePrivateIP;
+		if (usePrivateIP === true) {
+			getLocalIPs(function(privateIPs) {
+				var ip = privateIPs[0];
+				var token = info.token;
+				var hostname = info.hostname;
+				if (ip && token && hostname) {
+					updateCsieIoDDNS(ip, token, hostname);
+				} else {
+					console.error("onAlarm: ip or token or hostname setting error");
+					chrome.alarms.clear("updateDDNS", function(wasCleared) {
+						console.error("updateDDNS alarm clear");
+					});
+				}
+			});
+			return ;
+		}
+		// not privateIP
+		
 	
-
-	var ip = false;
-	var token = localStorage.getItem("token");
-	var hostname = localStorage.getItem("hostname");
-	if (token && hostname) {
-		updateCsieIoDDNS(ip, token, hostname);
-	} else {
-		console.error("onAlarm: ip or token or hostname setting error");
-		chrome.alarms.clear("updateDDNS", function(wasCleared) {
-			console.log("updateDDNS alarm clear");
-		});
-	}
+		var ip = false;
+		var token = info.token;
+		var hostname = info.hostname;
+		if (token && hostname) {
+			updateCsieIoDDNS(ip, token, hostname);
+		} else {
+			console.error("onAlarm: ip or token or hostname setting error");
+			chrome.alarms.clear("updateDDNS", function(wasCleared) {
+				console.log("updateDDNS alarm clear");
+			});
+		}
+	});
 
 });
 
@@ -51,10 +58,13 @@ function updateCsieIoDDNS(ip, token, hostname , noti) {//params.noti can only be
 		if (xhr.readyState == XMLHttpRequest.DONE) {
 			if (xhr.status == 200) {
 				//console.log(xhr.responseText);
-				noti = noti || localStorage.getItem("option_useNotification");
-				if(noti == "true"){
-					notification(xhr.responseText);
-				}
+				chrome.storage.local.get("info",function(obj){
+						var info=obj.info || {};
+						noti = noti || info.option_useNotification;
+						if(noti == true){
+							notification(xhr.responseText);
+						}
+				});
 
 			} else {
 				console.error(xhr.responseText);
@@ -84,21 +94,15 @@ function notification(data){
 	});
 
 }
-chrome.browserAction.onClicked.addListener(function() {
-	var optionhUrl = chrome.extension.getURL('option.html');
-	chrome.tabs.create({
-		url : optionhUrl
-	});
-});
-chrome.runtime.onInstalled.addListener(function(details) {
-	localStorage.clear();
-	var optionhUrl = chrome.extension.getURL('option.html');
-	chrome.tabs.create({
-		url : optionhUrl
-	});
+chrome.app.runtime.onLaunched.addListener(function(){
+		chrome.app.window.create('option.html', {
+				'innerBounds': {
+						'width': 750,
+						'height': 500
+				}
+		});
 
 });
-
 function getLocalIPs(callback) {
     var ips = [];
     var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
