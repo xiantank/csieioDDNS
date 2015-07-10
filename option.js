@@ -10,9 +10,6 @@ function init(info){
 
 	save.addEventListener("click", saveInfo);
 
-	//add listenser for usePrivateIP checkbox
-	var usePrivateIP = document.getElementById("usePrivateIP");
-	usePrivateIP.checked = (info.option_usePrivateIP) ? true : false;
 
 	//load state for isNotification
 	var useNotification = document.getElementById("useNotification");
@@ -27,10 +24,7 @@ function init(info){
 		var hostname = document.getElementById("hostname");
 		var token = document.getElementById("token");
 		var updateInterval = document.getElementById("updateInterval");
-		var usePrivateIP = document.getElementById("usePrivateIP");
-		getIP(function(ip) {
-			updateCsieIoDDNS((usePrivateIP.checked) ? ip : false, token.value, hostname.value, "true");
-		});
+		updateCsieIoDDNS(token.value, hostname.value, "true");
 	});
 
 	//display saved value
@@ -116,7 +110,6 @@ function saveInfo() {
 	var hostname = document.getElementById("hostname");
 	var token = document.getElementById("token");
 	var updateInterval = document.getElementById("updateInterval");
-	var usePrivateIP = document.getElementById("usePrivateIP");
 	var useBackground = document.getElementById("useBackground");
 
 	if (useBackground.checked) {
@@ -127,7 +120,6 @@ function saveInfo() {
 	var info={}
 
 
-	info["option_usePrivateIP"] = usePrivateIP.checked;
 	info["option_useNotification"]= useNotification.checked;
 	info["option_useBackground"]= useBackground.checked;
 	info['hostname']= hostname.value;
@@ -142,40 +134,10 @@ function saveInfo() {
 
 }
 
-function getIP(callback) {
 
-	var usePrivateIP = document.getElementById("usePrivateIP").checked;
-	if (usePrivateIP === true) {
-		getLocalIPs(function(privateIP) {
-			var ip_local = privateIP;
-			callback(ip_local);
-		});
-		return;
-	}
-
-	//jsonp for ip
+function updateCsieIoDDNS(token, hostname, noti) {//params.noti can only be true or not set, just for force update
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', "http://api.hostip.info/get_json.php");
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == XMLHttpRequest.DONE) {
-			if (xhr.status == 200) {
-				try {
-					var data = JSON.parse(xhr.responseText);
-					callback(data.ip);
-				} catch(e) {
-					return false;
-				}
-			} else {
-				console.error(xhr.responseText);
-			}
-		}
-	};
-	xhr.send();
-}
-
-function updateCsieIoDDNS(ip, token, hostname, noti) {//params.noti can only be true or not set, just for force update
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + ((ip) ? '&ip=' + ip : ""));
+	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + '&ip=' );
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == XMLHttpRequest.DONE) {
 			if (xhr.status == 200) {
@@ -215,26 +177,3 @@ function notification(data) {
 	});
 
 }
-
-function getLocalIPs(callback) {
-	var ips = [];
-	var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
-	var pc = new RTCPeerConnection({
-		iceServers : []
-	});
-	pc.createDataChannel('');
-	pc.onicecandidate = function(e) {
-		if (!e.candidate) {
-			callback(ips[0]);
-			return;
-		}
-		var ip = /(\d+\.\d+\.\d+\.\d+)/.exec(e.candidate.candidate)[1];
-		if (ips.indexOf(ip) == -1)
-			ips.push(ip);
-	};
-	pc.createOffer(function(sdp) {
-		pc.setLocalDescription(sdp);
-	}, function onerror() {
-	});
-}
-

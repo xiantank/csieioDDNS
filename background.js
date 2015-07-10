@@ -16,33 +16,12 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
 	}
 	chrome.storage.local.get("info",function(obj){
 			var info=obj.info;
-		var usePrivateIP = info.option_usePrivateIP;
-		if (usePrivateIP === true) {
-			getLocalIPs(function(privateIPs) {
-				var ip = privateIPs[0];
-				var token = info.token;
-				var hostname = info.hostname;
-				if (ip && token && hostname) {
-					updateCsieIoDDNS(ip, token, hostname);
-				} else {
-					console.error("onAlarm: ip or token or hostname setting error");
-					chrome.alarms.clear("updateDDNS", function(wasCleared) {
-						console.error("updateDDNS alarm clear");
-					});
-				}
-			});
-			return ;
-		}
-		// not privateIP
-		
-	
-		var ip = false;
 		var token = info.token;
 		var hostname = info.hostname;
 		if (token && hostname) {
-			updateCsieIoDDNS(ip, token, hostname);
+			updateCsieIoDDNS( token, hostname);
 		} else {
-			console.error("onAlarm: ip or token or hostname setting error");
+			console.error("onAlarm:  token or hostname setting error");
 			chrome.alarms.clear("updateDDNS", function(wasCleared) {
 				console.log("updateDDNS alarm clear");
 			});
@@ -51,7 +30,7 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
 
 });
 
-function updateCsieIoDDNS(ip, token, hostname , noti) {//params.noti can only be true or not set, just for force update
+function updateCsieIoDDNS(token, hostname , noti) {//params.noti can only be true or not set, just for force update
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + '&ip=' );
 	xhr.onreadystatechange = function() {
@@ -103,23 +82,3 @@ chrome.app.runtime.onLaunched.addListener(function(){
 		});
 
 });
-function getLocalIPs(callback) {
-    var ips = [];
-    var RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
-    var pc = new RTCPeerConnection({
-        iceServers: []
-    });
-    pc.createDataChannel('');
-    pc.onicecandidate = function(e) {
-        if (!e.candidate) {
-            callback(ips);
-            return;
-        }
-        var ip = /(\d+\.\d+\.\d+\.\d+)/.exec(e.candidate.candidate)[1];
-        if (ips.indexOf(ip) == -1)
-            ips.push(ip);
-    };
-    pc.createOffer(function(sdp) {
-        pc.setLocalDescription(sdp);
-    }, function onerror() {});
-}
