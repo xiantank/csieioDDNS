@@ -12,6 +12,8 @@ csie.io DDNS client for chrome.
 --
 almost there!!!!
 
-剩下詳細的testing
+剩下testing
 目前簡單的測試在Google Chrome OS可以正常update, notification
+重開機也正常
 
+待測：1.各選項使用與不使用 2.在一般chrome browser中測試  3.???
