@@ -12,5 +12,5 @@ csie.io DDNS client for chrome.
 
 --
 TODO work:
-1. 改成chrome app
-2. 不再使用IP, 拿掉private IP 功能
+1. 改成chrome app<br/>
+2. 不再使用IP, 拿掉private IP 功能<br/>
