@@ -18,5 +18,5 @@ setting > System > check : Continue running background apps when Google Chrome i
 --
 TODO:
 
-1. maybe use power icon to decide whether start or stop
+1. maybe use status button to start or stop
 2. always run in background(edit option page, add background permission)
