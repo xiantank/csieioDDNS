@@ -9,7 +9,7 @@ csie.io DDNS client for chrome.
 參考來源: <a href="https://github.com/clyang/CsieDnsClients">https://github.com/clyang/CsieDnsClients</a>
 
 --
-<h2>Windows</h2>
+<h2>Windows Chrome browser</h2>
 
 如果要讓他可以跑在背景
 
