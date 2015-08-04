@@ -53,7 +53,9 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
 			console.error("onAlarm:  token or hostname setting error");
 			chrome.alarms.clear("updateDDNS", function (wasCleared) {
 				console.log("updateDDNS alarm clear");
+				chrome.storage.local.set({'powerStatus':false});
 			});
+
 		}
 	});
 });

@@ -15,6 +15,10 @@ function ddnsStop(){
 	cancelBackground();
 }
 function ddnsStart(){
+	if(token.value === "" || hostname.value === "" ){
+		ddnsStop();
+		return;
+	}
 	askBackground(function(){
 		if(chrome.runtime.lastError){
 			ddnsStop();
@@ -57,21 +61,7 @@ function init(info){
 
 	save.addEventListener("click", saveInfo);
 
-	//load state for isNotification
-	var powerStatus = document.getElementById("powerStatus");
-	if(info.powerStatus == true){
-		ddnsStart();
-	}
-	else{
-		ddnsStop();
-	}
-	powerStatus.addEventListener("click", function() {
-		if(powerStatus.className === "powerON"){
-			ddnsStop();
-		}else{
-			ddnsStart();
-		}
-	});
+
 	//load state for isNotification
 	var useNotification = document.getElementById("useNotification");
 	useNotification.checked = (info.option_useLocalNotification ) ? true : false;
@@ -105,6 +95,22 @@ function init(info){
 		}
 		e.stopPropagation();
 	}, false);
+
+	//load state for isNotification
+	var powerStatus = document.getElementById("powerStatus");
+	if(info.powerStatus == true){
+		ddnsStart();
+	}
+	else{
+		ddnsStop();
+	}
+	powerStatus.addEventListener("click", function() {
+		if(powerStatus.className === "powerON"){
+			ddnsStop();
+		}else{
+			ddnsStart();
+		}
+	});
 
 }
 function askBackground(callback) {
