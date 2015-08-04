@@ -1,14 +1,14 @@
 {
 	"name": "csie.io DDNS",
 	"description": "csie.io DDNS client for chrome. 本服務由csie.io提供, 詳細說明請登入: https://csie.io DNS管理介面",
-	"version": "1.0.0.6",
+	"version": "1.0.0.7",
 	"app":
 	{
 		"background": {
 			"scripts": ["background.js"]
 		}
 	},
-	"permissions": [ "notifications", "storage", "alarms", "https://csie.io/*"],
+	"permissions": [ "notifications", "storage", "alarms", "https://csie.io/*", "http://checkip.amazonaws.com/"],
 	"optional_permissions": [ "background" ],
 	"icons": { 
 		"16": "img/csieio-16.png",
