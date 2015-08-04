@@ -42,7 +42,10 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
 						}
 					}
 					else{//if we can't IP, still update , server not need IP
-						updateCsieIoDDNS(token, hostname);
+						info.oldIP = "";
+						chrome.storage.local.set({'info':info},function(){
+							updateCsieIoDDNS(token, hostname);
+						});
 					}
 					/* */
 
@@ -109,6 +112,7 @@ function notification(data , notiOptions) {
 	if(notiOptions.useLocal || !notiOptions) {
 		var mesg = "fail";
 		if (data == "OK") {
+			var ip = obj.info.oldIP || "";
 			mesg = "csie.io DDNS update success";
 		} else if (data == "KO") {
 			mesg = "Wrong token or hostname!\nPlease check again.";
@@ -128,6 +132,9 @@ function notification(data , notiOptions) {
 	if(notiOptions.useLine && notiOptions.lineToken != ""){
 		chrome.storage.local.get( "info", function (obj) {
 			var ip = obj.info.oldIP || "";
+			if(ip === ""){
+				return;
+			}
 			var xhr = new XMLHttpRequest();
 			xhr.open('GET', 'https://csie.io/lineme?token=' + notiOptions.lineToken + "&msg=" + "偵測到IP改變，新的IP為:" + ip);
 			xhr.onreadystatechange = function () {
