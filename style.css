@@ -101,3 +101,13 @@ h1 {
 	height: 1.4rem;
 	width: 1.4rem;
 }
+#powerStatus{
+	background-color: #e9e7ef;
+	height: inherit;
+	border-radius: .5rem;
+
+}
+.powerON{
+}
+.powerOFF{
+}

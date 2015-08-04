@@ -21,25 +21,31 @@
 				</div>
 				<div id="advancedOptions" class="input">
 					<div id="advOptionTopbar">
-						+ advanced options
+						+ Notifications options
 					</div>
 					<div id="advOptionContainer">
 						<hr />
-						<div><input type="checkbox" id="useNotification"><label for="useNotification">Notification</label></div>
-						<div><input type="checkbox" id="useBackground">
+						<div><input type="checkbox" id="useNotification"><label for="useNotification">本機通知</label></div>
+						<div>
+							<input type="checkbox" id="useLineNotification"><label for="useLineNotification">Line 通知</label>
+							<input type="input" class="optionInput" id="lineToken" placeholder="Line通知專用Token" />
+						</div>
+						<!--div><input type="checkbox" id="useBackground">
 							<label for="useBackground">
 								Always run in background
 								<img class="inline-img" src="img/question.png" title="關掉chrome browser, 仍會在背景執行(Google Chrome OS 可使用, 其他 OS 不一定)"/>
-							</label></div>
+							</label>
+						</div-->
 					</div>
 				</div>
 				<div id="bottons">
+					<img id="powerStatus" class="powerOFF" >	</img>
 					<button id="save">
 						save
 					</button>
-					<button id="forceUpdate">
+					<!--button id="forceUpdate">
 						force update
-					</button>
+					</button-->
 				</div>
 			</div>
 
