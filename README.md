@@ -9,14 +9,10 @@ csie.io DDNS client for chrome.
 參考來源: <a href="https://github.com/clyang/CsieDnsClients">https://github.com/clyang/CsieDnsClients</a>
 
 --
-<h2>Windows Chrome browser</h2>
+<h2>Run in Windows Chrome browser</h2>
 
 如果要讓他可以跑在背景
 
 setting > System > check : Continue running background apps when Google Chrome is closed
 ![allow run in background](https://raw.githubusercontent.com/xiantank/csieioDDNS/master/img/readme_background.png)
---
-TODO:
 
-1. maybe use status button to start or stop
-2. always run in background(edit option page, add background permission)
