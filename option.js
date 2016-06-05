@@ -1,76 +1,59 @@
-document.addEventListener('DOMContentLoaded', function() {
-		chrome.storage.local.get(["info", "powerStatus"],function(obj){
-				var info=obj.info||{};
-				info.powerStatus = obj.powerStatus;
-				init(info);
-		});
+document.addEventListener('DOMContentLoaded', function () {
+	chrome.storage.local.get(["config", "powerStatus"], function (obj) {
+		var config = obj.config || {};
+		config.powerStatus = obj.powerStatus;
+		init(config);
+	});
 });
-function ddnsStop(){
+function ddnsStop() {
 	var powerStatus = document.getElementById("powerStatus");
 	powerStatus.className = "powerOFF";
 	powerStatus.src = chrome.runtime.getURL("img/power_off.png");
 	powerStatus.title = "Not running";
-	chrome.storage.local.set({'powerStatus':false});
-	chrome.alarms.clear("updateDDNS");
 	cancelBackground();
+	return new Promise(resolve=> {
+		chrome.runtime.sendMessage({powerStatus: false});
+
+	});
 }
-function ddnsStart(){
-	if(token.value === "" || hostname.value === "" ){
+function ddnsStart() {
+	if (token.value === "" || hostname.value === "") {
 		ddnsStop();
 		return;
 	}
-	askBackground(function(){
-		if(chrome.runtime.lastError){
+	askBackground(function () {
+		if (chrome.runtime.lastError) {
 			ddnsStop();
 		}
-		chrome.storage.local.get("info",function(obj){
-			var info=obj.info||{};
-			var updateInterval = info.updateInterval || 60;
-			if(isEmptyObject(info)){
-				saveInfo();
-			}
-			chrome.alarms.create("updateDDNS", {
-				delayInMinutes : parseInt(updateInterval),
-				periodInMinutes : parseInt(updateInterval)
-			});
-			chrome.alarms.get("updateDDNS",function(alarm){
-				if(alarm){
-					var powerStatus = document.getElementById("powerStatus");
-					powerStatus.className = "powerON";
-					powerStatus.src=powerStatus.src=chrome.runtime.getURL("img/power_on.png");
-					powerStatus.title = "正在運行中...";
-					console.log(alarm);
-				}
-				else{
-					console.log("no alarm:"+alarm);
-				}
-			});
-			updateCsieIoDDNS(info.token,info.hostname, true);
+
+		return new Promise(resolve=> {
+			chrome.runtime.sendMessage({powerStatus: true});
+			let powerStatus = document.getElementById("powerStatus");
+			powerStatus.className = "powerON";
+			powerStatus.src = powerStatus.src = chrome.runtime.getURL("img/power_on.png");
+			powerStatus.title = "正在運行中...";
 		});
-		chrome.storage.local.set({'powerStatus':true});
-
 	});
-
-
-
-
 }
-function init(info){
+function init(info) {
 	//add listenser for save
 	var save = document.getElementById("save");
 
 	save.addEventListener("click", saveInfo);
 
-
 	//load state for isNotification
 	var useNotification = document.getElementById("useNotification");
-	useNotification.checked = (info.option_useLocalNotification ) ? true : false;
+	useNotification.checked = info.notifyStrategy && (info.notifyStrategy.indexOf("chrome") !== -1 );
 
-	//load state for line Notification
+	//load state for IM Notification
 	var useLineNotification = document.getElementById("useLineNotification");
-	useLineNotification.checked = (info.option_useLineNotification ) ? true : false;
-	var lineToken = document.getElementById("lineToken");
-	lineToken.value = info.lineToken || "";
+	useLineNotification.checked = info.notifyStrategy && (info.notifyStrategy.indexOf("line") !== -1 );
+
+	var useFBNotification = document.getElementById("useFBNotification");
+	useFBNotification.checked = info.notifyStrategy && (info.notifyStrategy.indexOf("fb") !== -1 );
+
+	var imToken = document.getElementById("imToken");
+	imToken.value = info.imToken || "";
 
 	//display saved value
 	var hostname = document.getElementById("hostname");
@@ -78,18 +61,18 @@ function init(info){
 	var updateInterval = document.getElementById("updateInterval");
 
 	hostname.value = info.hostname || "";
-	token.value = info.token || "";
-	updateInterval.value = info.updateInterval || 60;
+	token.value = info.ddnsToken || "";
+	updateInterval.value = info.interval || 60;
 
 	/* show advance setting*/
 	var advOptionTopbar = document.getElementById('advOptionTopbar');
 	var advOptContainer = document.getElementById('advOptionContainer');
 	advOptContainer.style.display = "none";
-	advOptionTopbar.addEventListener("click" , function(e){
-		if(advOptContainer.style && advOptContainer.style.display == "none"){
+	advOptionTopbar.addEventListener("click", function (e) {
+		if (advOptContainer.style && advOptContainer.style.display == "none") {
 			advOptContainer.style.display = "block";
 			advOptionTopbar.innerHTML = '-' + advOptionTopbar.innerText.slice(1);
-		}else{
+		} else {
 			advOptContainer.style.display = "none";
 			advOptionTopbar.innerHTML = '+' + advOptionTopbar.innerText.slice(1);
 		}
@@ -98,20 +81,19 @@ function init(info){
 
 	//load state for isNotification
 	var powerStatus = document.getElementById("powerStatus");
-	if(info.powerStatus == true){
+	if (info.powerStatus == true) {
 		ddnsStart();
 	}
-	else{
+	else {
 		ddnsStop();
 	}
-	powerStatus.addEventListener("click", function() {
-		if(powerStatus.className === "powerON"){
+	powerStatus.addEventListener("click", function () {
+		if (powerStatus.className === "powerON") {
 			ddnsStop();
-		}else{
+		} else {
 			ddnsStart();
 		}
 	});
-
 }
 function askBackground(callback) {
 
@@ -119,163 +101,92 @@ function askBackground(callback) {
 	// click handler.
 	chrome.permissions.contains({
 		permissions: ['background']
-	}, function(result) {
+	}, function (result) {
 		if (result) {
-			if(callback) callback();
+			if (callback) callback();
 		}
 		else {
 			chrome.permissions.request({
-				permissions : ['background']
-			}, function(granted) {
+				permissions: ['background']
+			}, function (granted) {
 				// The callback argument will be true if the user granted the permissions.
-				var opt={};
+				var opt = {};
 				if (granted) {
 					opt = {
-						type : "basic",
-						title : "csie.io DDNS update",
-						message : "Power ON",
-						iconUrl : "img/csieio-128.png"
+						type: "basic",
+						title: "csie.io DDNS update",
+						message: "Power ON",
+						iconUrl: "img/csieio-128.png"
 					};
 
-					chrome.notifications.create("id" + Math.random(), opt, function(id) {
+					chrome.notifications.create("id" + Math.random(), opt, function (id) {
 						console.log(id);
 					});
-					if(callback) callback();
+					if (callback) callback();
 				} else {
 					opt = {
-						type : "basic",
-						title : "csie.io DDNS update",
-						message : "request background permissions fail",
-						iconUrl : "img/csieio-128.png"
+						type: "basic",
+						title: "csie.io DDNS update",
+						message: "request background permissions fail",
+						iconUrl: "img/csieio-128.png"
 
 					};
-
-					chrome.notifications.create("id" + Math.random(), opt, function(id) {
+					chrome.notifications.create("id" + Math.random(), opt, function (id) {
 						console.log(id);
 					});
 				}
 			});
 		}
 	});
-
 }
 
 function cancelBackground(callback) {
 	chrome.permissions.remove({
-		permissions : ['background'],
-	}, function(removed) {
+		permissions: ['background']
+	}, function (removed) {
 		if (removed) {
 			var opt = {
-				type : "basic",
-				title : "csie.io DDNS update",
-				message : "Power OFF",
-				iconUrl : "img/csieio-128.png"
+				type: "basic",
+				title: "csie.io DDNS update",
+				message: "Power OFF",
+				iconUrl: "img/csieio-128.png"
 			};
-			chrome.notifications.create("id" + Math.random(), opt, function(id) {
+			chrome.notifications.create("id" + Math.random(), opt, function (id) {
 				console.log(id);
 			});
-			if(callback) callback();
+			if (callback) callback();
 		} else {
 		}
 	});
 }
 
 function saveInfo() {
-	var hostname = document.getElementById("hostname");
-	var token = document.getElementById("token");
-	var updateInterval = document.getElementById("updateInterval");
-	var useNotification = document.getElementById("useNotification");
-	var useLineNotification = document.getElementById("useLineNotification");
-	var lineToken = document.getElementById("lineToken");
-	var info={};
-	//TODO save oldIP;
+	var hostname = document.getElementById("hostname").value;
+	var token = document.getElementById("token").value;
+	var updateInterval = document.getElementById("updateInterval").value;
+	var useNotification = document.getElementById("useNotification").checked;
+	var useLineNotification = document.getElementById("useLineNotification").checked;
+	let useFBNotification = document.getElementById("useFBNotification").checked;
+	var lineToken = document.getElementById("imToken").value;
 
+	var info = {};
 
+	let config = {};
+	config.hostname = hostname;
+	config.ddnsToken = token;
+	config.imToken = lineToken;
+	config.interval = updateInterval;
+	config.notifyStrategy = [];
+	if (useLineNotification) config.notifyStrategy.push("line");
+	if (useFBNotification) config.notifyStrategy.push("fb");
+	if (useNotification) config.notifyStrategy.push("chrome");
 
-	info["option_useLocalNotification"]= useNotification.checked;
-	info["option_useLineNotification"]= useLineNotification.checked;
-	info["lineToken"] = lineToken.value;
-	info['hostname']= hostname.value;
-	info['token']= token.value;
-	info['updateInterval']= updateInterval.value;
-
-	chrome.alarms.create("updateDDNS", {
-		delayInMinutes : parseInt(updateInterval.value),
-		periodInMinutes : parseInt(updateInterval.value)
+	return new Promise((resolve)=> {
+		chrome.runtime.sendMessage({config: config}, ()=> {
+			return resolve();
+		});
 	});
 
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'http://checkip.amazonaws.com/' );
-	xhr.onreadystatechange = function(){
-		if (xhr.readyState == XMLHttpRequest.DONE) {
-			if(xhr.status == 200) {
-				info.oldIP = xhr.responseText;
-			}
-			else{
-				console.log(xhr.responseText);
-			}
-			chrome.storage.local.set({'info':info},function(){
-				if(chrome.runtime.lastError){
-					notification("save error!");
-					return;
-				}
-			});
-		}
-	};
-	xhr.send();
 
 
-}
-
-
-function updateCsieIoDDNS(token, hostname, noti) {//params.noti can only be true or not set
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'https://csie.io/update?hn=' + hostname + '&token=' + token + '&ip=' );
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState == XMLHttpRequest.DONE) {
-			if (xhr.status == 200) {
-					chrome.storage.local.get("info",function(obj){
-							var info=obj.info || {};
-							if (noti ) {
-								noti = {};
-								noti.useLocal = info.option_useLocalNotification;
-								notification(xhr.responseText , noti);
-							}
-					});
-			} else {
-				console.error(xhr.responseText);
-			}
-		}
-	};
-	xhr.send();
-}
-/**
- *
- * @param {string} data
- * @param {{useLocal:Boolean, useLine: Boolean}} notiOptions
- */
-function notification(data , notiOptions) {
-	if(notiOptions.useLocal || !notiOptions) {
-		var mesg = "fail";
-		if (data == "OK") {
-			mesg = "csie.io DDNS update success";
-		} else if (data == "KO") {
-			mesg = "Wrong token or hostname!\nPlease check again.";
-		}
-		var opt = {
-			type: "basic",
-			title: "csie.io DDNS update",
-			message: mesg,
-			iconUrl: "img/csieio-128.png"
-
-		};
-
-		chrome.notifications.create("id" + Math.random(), opt, function (id) {
-			console.log(id);
-		});
-	}
-
-}
-function isEmptyObject(obj){
-	return Object.keys(obj).length===0
 }

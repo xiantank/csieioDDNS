@@ -35,7 +35,7 @@ html , body{
 	margin: .7rem auto;
 	font-size: 1.5rem;
 }
-.input input[type="text"]{
+.input > input[type="text"]{
 	position:relative;
 	height : 100%;
 	width: 100%;
@@ -60,7 +60,7 @@ button{
 	border-radius: .7rem;
 	min-width: 6.5rem;
 }
-#bottons{
+#buttons{
 	position:relative;
 	margin: 0 auto;
 	text-align: center;
