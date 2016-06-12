@@ -21,20 +21,16 @@ chrome.runtime.onInstalled.addListener(function (details) {
 function init() {
 	let csieIoDDNS = new CsieIoDDns();
 	ddnsManager = new DDNSManager(csieIoDDNS);
-	chromeLocalStorageGet("powerStatus").then(powerStatus=> {
-		if (powerStatus) {
-			ddnsManager.start();
-		} else {
-			ddnsManager.stop();
-		}
-	});
+
 	listenFromOptions();
 }
 
 function listenFromOptions() {
 	chrome.runtime.onMessage.addListener(function (message) {
 		if (message.config) {
-			chromeLocalStorageSet({config: message.config});
+			chromeLocalStorageSet({config: message.config}).then(()=> {
+				ddnsManager.resetConfig();
+			});
 		} else if (message.powerStatus !== undefined) {
 			if (message.powerStatus === true) {
 				chrome.storage.local.set({'powerStatus': true});
@@ -74,6 +70,8 @@ class DDNSManager { // alarms manage, refresh config from chrome.storage
 		this.ddns = csieIoDDNS;
 		this.alarmName = "updateDDNS";
 		this.interval = 60;
+		chromeLocalStorageSet({oldIP: ""});
+
 		chrome.alarms.onAlarm.addListener((alarm) => {
 			if (!alarm) {
 				return;
@@ -81,34 +79,42 @@ class DDNSManager { // alarms manage, refresh config from chrome.storage
 			if (alarm.name !== this.alarmName) {
 				return;
 			}
-			chromeLocalStorageGet("config").then((config)=> {
-				this.resetConfig(config);
-				this.ddns.update();
+			chromeLocalStorageGet("oldIP").then((oldIP)=> {
+				this.resetConfig().then(()=> {
+					this.ddns.update(oldIP);
+				});
 			});
 
-		})
+		});
 	}
 
 
-	resetConfig(config = {}) {
-		if (config.hostname) {
-			this.ddns.hostname = config.hostname;
-		}
-		if (config.ddnsToken) {
-			this.ddns.ddnsToken = config.ddnsToken;
-		}
-		if (config.imToken) {
-			this.ddns.imToken = config.imToken;
-		}
-		if (config.notifyStrategy) {
-			this.ddns.notifyStrategy = config.notifyStrategy;
-		}
-		if (config.interval) {
-			if (this.interval !== config.interval) {
-				this.interval = config.interval;
-				this.start();
+	resetConfig() {
+		return chromeLocalStorageGet(["config", "powerStatus"]).then((items)=> {
+			let [config, powerStatus] = items;
+			if (config.hostname) {
+				this.ddns.hostname = config.hostname;
 			}
-		}
+			if (config.ddnsToken) {
+				this.ddns.ddnsToken = config.ddnsToken;
+			}
+			if (config.imToken) {
+				this.ddns.imToken = config.imToken;
+			}
+			if (config.notifyStrategy) {
+				this.ddns.notifyStrategy = config.notifyStrategy;
+			}
+			if (config.interval) {
+				if (this.interval !== config.interval) {
+					this.interval = config.interval;
+				}
+			}
+			if (powerStatus) {
+				ddnsManager.start();
+			} else {
+				ddnsManager.stop();
+			}
+		});
 	}
 
 	start() {
@@ -127,19 +133,6 @@ class DDNSManager { // alarms manage, refresh config from chrome.storage
 		});
 	}
 
-	alarmHandler(alarm) {
-		if (!alarm) {
-			return;
-		}
-		if (alarm.name !== this.alarmName) {
-			return;
-		}
-		chromeLocalStorageGet("config").then((config)=> {
-			this.resetConfig(config);
-			this.ddns.update();
-		});
-
-	}
 }
 
 class CsieIoDDns { // getIp, updateDDNS, notification strategy
@@ -152,7 +145,6 @@ class CsieIoDDns { // getIp, updateDDNS, notification strategy
 	 * @param {(string|string[])} [config.notifyStrategy] - what im should use; allow [chrome, fb, line]
 	 */
 	constructor(config) {
-		this.url = "https://csie.io/update";
 		config = config || {};
 		this.hostname = config.hostname || "";
 		this.ddnsToken = config.ddnsToken || "";
@@ -176,15 +168,15 @@ class CsieIoDDns { // getIp, updateDDNS, notification strategy
 		this._notifyStrategy = strategy;
 	}
 
-	update() {
-		this.getPublicIP().then(currentIP=> {
+	update(oldIP) {
+		return this.getPublicIP().then(currentIP=> {
 			if (!currentIP) {// can not get public ip but still update ddns
 				return this._updateDDNS();
 			}
-			if (currentIP !== this.ip) { // ip change
+			if (currentIP !== oldIP) { // ip change
 				return this._updateDDNS().then(msg=> {
 					if (msg === "OK") {
-						this.ip = currentIP;
+						chromeLocalStorageSet({oldIP: currentIP});
 						return this.notification(`偵測到IP改變，新的IP為: ${currentIP}`);
 					} else if (msg === "KO") {
 						return this.notification(`更新發生錯誤，請檢查並且更新您的設定`);
