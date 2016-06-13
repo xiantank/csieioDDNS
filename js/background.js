@@ -25,21 +25,25 @@ function init() {
 	listenFromOptions();
 }
 
+function optionsMessageHandler(message) {
+	if (message.config) {
+		return chromeLocalStorageSet({config: message.config}).then(()=> {
+			return ddnsManager.resetConfig();
+		});
+	} else if (message.powerStatus !== undefined) {
+		if (message.powerStatus === true) {
+			return chromeLocalStorageSet({'powerStatus': true});
+		} else {
+			return chromeLocalStorageSet({'powerStatus': false});
+		}
+	}
+}
+
 function listenFromOptions() {
 	chrome.runtime.onMessage.addListener(function (message) {
-		if (message.config) {
-			chromeLocalStorageSet({config: message.config}).then(()=> {
-				ddnsManager.resetConfig();
-			});
-		} else if (message.powerStatus !== undefined) {
-			if (message.powerStatus === true) {
-				chrome.storage.local.set({'powerStatus': true});
-				ddnsManager.start();
-			} else {
-				chrome.storage.local.set({'powerStatus': false});
-				ddnsManager.stop();
-			}
-		}
+		return optionsMessageHandler(message).then(()=> {
+			ddnsManager.restart();
+		});
 	});
 }
 function chromeLocalStorageGet(keys) {
@@ -71,8 +75,13 @@ class DDNSManager { // alarms manage, refresh config from chrome.storage
 		this.alarmName = "updateDDNS";
 		this.interval = 60;
 		chromeLocalStorageSet({oldIP: ""});
+		this.resetConfig().then(()=> {
+			this.restart();
+		});
+
 
 		chrome.alarms.onAlarm.addListener((alarm) => {
+			console.log(new Date(), "alarm !");
 			if (!alarm) {
 				return;
 			}
@@ -88,10 +97,8 @@ class DDNSManager { // alarms manage, refresh config from chrome.storage
 		});
 	}
 
-
 	resetConfig() {
-		return chromeLocalStorageGet(["config", "powerStatus"]).then((items)=> {
-			let [config, powerStatus] = items;
+		return chromeLocalStorageGet("config").then((config)=> {
 			if (config.hostname) {
 				this.ddns.hostname = config.hostname;
 			}
@@ -109,10 +116,15 @@ class DDNSManager { // alarms manage, refresh config from chrome.storage
 					this.interval = config.interval;
 				}
 			}
+		});
+	}
+
+	restart() {
+		return chromeLocalStorageGet("powerStatus").then((powerStatus)=> {
 			if (powerStatus) {
-				ddnsManager.start();
+				this.start();
 			} else {
-				ddnsManager.stop();
+				this.stop();
 			}
 		});
 	}
@@ -191,21 +203,12 @@ class CsieIoDDns { // getIp, updateDDNS, notification strategy
 	}
 
 	_updateDDNS() {
-		return fetch(`https://csie.io/update?hn=${this.hostname}&token=${this.ddnsToken}&ip=`).then(response=> {
-			return response.text();
-		})
+		return request(`https://csie.io/update?hn=${this.hostname}&token=${this.ddnsToken}&ip=`, {cache: 'no-cache'});
 	}
 
 	getPublicIP() {
-		return fetch("http://checkip.amazonaws.com/").then(response=> {
-			if (response.status >= 200 && response.status < 300) {
-				return response.text().then(ipText=> {
-					return ipText.trim();
-				});
-			} else {
-				console.error(response);
-				return "";
-			}
+		return request("http://checkip.amazonaws.com/", {cache: 'no-cache'}).then(responseText=> {
+			return responseText.trim();
 		}).catch(e=> {
 			console.log("getPublicIP fail", e);
 			return "";
@@ -243,7 +246,7 @@ class CsieIoDDns { // getIp, updateDDNS, notification strategy
 	}
 
 	notifyIM(im, msg) {
-		return fetch(`https://csie.io/msgme?token=${this.imToken}&im=${im}&msg=${msg}`);
+		return request(`https://csie.io/msgme?token=${this.imToken}&im=${im}&msg=${msg}`, {cache: 'no-cache'});
 	}
 }
 
@@ -257,3 +260,33 @@ chrome.app.runtime.onLaunched.addListener(function () {
 		}
 	});
 });
+
+function request(url, ...args) {
+	if (false) {
+		return fetch(url, ...args).then(response=> {
+			if (response.status >= 200 && response.status < 300) {
+				return response.text();
+			} else {
+				console.error(response);
+				return "";
+			}
+		});
+	}
+	return new Promise((resolve, reject)=> {
+		let xhr = new XMLHttpRequest();
+		xhr.open('GET', url);
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState == XMLHttpRequest.DONE) {
+				if (xhr.status == 200) {
+					resolve(xhr.responseText);
+				}
+				else {
+					console.log(xhr.status, xhr);
+					reject(xhr.responseText);
+				}
+
+			}
+		};
+		xhr.send();
+	});
+}
