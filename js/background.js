@@ -4,7 +4,7 @@ let ddnsManager;
 chrome.runtime.onInstalled.addListener(function (details) {
 	if (details.reason === "update") {
 		// convert old version storage to current version
-		chromeLocalStorageGet("info").then(info=> {
+		chromeLocalStorageGet("info").then((info = {}) => {
 			let config = {};
 			config.hostname = info.hostname;
 			config.ddnsToken = info.token;
@@ -22,7 +22,16 @@ function init() {
 	let csieIoDDNS = new CsieIoDDns();
 	ddnsManager = new DDNSManager(csieIoDDNS);
 
+	listenExtensionActions();
 	listenFromOptions();
+}
+function listenExtensionActions() {
+	chrome.browserAction.onClicked.addListener(() => {
+		const optionhUrl = chrome.extension.getURL("option.html");
+		chrome.tabs.create({
+			url: optionhUrl,
+		});
+	});
 }
 
 function optionsMessageHandler(message) {
@@ -68,17 +77,39 @@ function chromeLocalStorageSet(items) {
 		});
 	});
 }
-
+async function getLocalIP() {
+	const privateIPs = await getLocalIPs();
+	return privateIPs[0];
+}
+function getLocalIPs() {
+	return new Promise((resolve, reject) => {
+		const ips = [];
+		const RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
+		const pc = new RTCPeerConnection({
+			iceServers: [],
+		});
+		pc.createDataChannel("");
+		pc.onicecandidate = function (e) {
+			if (!e.candidate) {
+				resolve(ips);
+				return;
+			}
+			const ip = /(\d+\.\d+\.\d+\.\d+)/.exec(e.candidate.candidate)[1];
+			if (ips.indexOf(ip) == -1) ips.push(ip);
+		};
+		pc.createOffer((sdp) => {
+			pc.setLocalDescription(sdp);
+		}, () => {});
+	});
+}
 class DDNSManager { // alarms manage, refresh config from chrome.storage
 	constructor(csieIoDDNS) {
 		this.ddns = csieIoDDNS;
 		this.alarmName = "updateDDNS";
 		this.interval = 60;
-		chromeLocalStorageSet({oldIP: ""});
 		this.resetConfig().then(()=> {
 			this.restart();
 		});
-
 
 		chrome.alarms.onAlarm.addListener((alarm) => {
 			console.log(new Date(), "alarm !");
@@ -251,15 +282,6 @@ class CsieIoDDns { // getIp, updateDDNS, notification strategy
 }
 
 init();
-
-chrome.app.runtime.onLaunched.addListener(function () {
-	chrome.app.window.create('option.html', {
-		'innerBounds': {
-			'width': 750,
-			'height': 500
-		}
-	});
-});
 
 function request(url, ...args) {
 	if (false) {
